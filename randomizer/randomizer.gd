@@ -49,11 +49,17 @@ func create(logicFileName: String, startingEquipment : Array) -> String:
 	# save redistributed as seed file to user directory "seeds" with a hashed name
 	# the real path should be something like "%APPDATA%/TetraForce/seeds/<hash>.json" on Windows
 	# or "~/.local/share/godot/app_userdata/TetraForce/seeds/<hash>.json" for Mac and Linux
+	
+	var seedDir = "user://seeds/"
+	var dirHandle = Directory.new()
 	var redistributedJson = to_json(redistributed)
 	var redistributedHash = redistributedJson.md5_text()
-	# var seedFileName = "user://seeds/" + redistributedHash + ".json"
-	var seedFileName = "user://seed.json"
+	var seedFileName = seedDir + redistributedHash + ".json"
+	# var seedFileName = "user://seed.json"
 	# print("\nAttempting to save seed to file ", seedFileName)
+	
+	if not dirHandle.dir_exists(seedDir):
+		dirHandle.make_dir_recursive(seedDir)
 	var seedFile = File.new()
 	var openError = seedFile.open(seedFileName, File.WRITE)
 	if openError != OK:
