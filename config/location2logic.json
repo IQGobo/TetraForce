@@ -1,0 +1,13 @@
+{
+    "DemoChestInFrontOfRedRoofedHouse": "has[\"hearts\"] >= 3",
+    "DemoChestInFrontOfBlueRoofedHouse": "has[\"hearts\"] >= 3",
+    "DemoChestOnOpenField": "has[\"hearts\"] >= 3",
+    "DemoChestInWoods": "has[\"hearts\"] >= 3",
+    "DemoChestOnPath": "has[\"hearts\"] >= 3",
+    "DemoChestAtVendorLeft": "has[\"coins\"] >= 10",
+    "DemoChestAtVendorRight": "has[\"coins\"] >= 10",
+    "DemoChestInCave": "has[\"bombs\"]",
+    "DemoChestBehindBlastWallInCave": "has[\"bombs\"]",
+    "DemoChestBehindBowPuzzle": "has[\"bow\"]",
+    "DemoChestAfterDifficultBattle": "has[\"hearts\"] >= 4 && (has[\"bombs\"] || has[\"bow\"])"
+}

@@ -1,14 +1,18 @@
 extends CanvasLayer
 
 onready var text = $Control/Label
+var debug_text : String = "empty"
 
-func _ready():
-	queue_free()
+func _init():
+	var Randomizer = load("res://randomizer/randomizer.gd")
+	var rzer = Randomizer.new()
+	debug_text = rzer.create("res://config/location2logic.json", ["heartfull", "heartfull", "heartfull"])
 
 func _process(delta):
 	text.text = str(
 		"Player List: ", network.player_list,
 		"\nMap Peers: ", network.map_peers,
 		"\nMap Hosts: ", network.map_hosts,
-		"\nPlayer Nodes: ", get_tree().get_nodes_in_group("player")
+		"\nPlayer Nodes: ", get_tree().get_nodes_in_group("player"),
+		"\nRandomizer: ", debug_text
 		)

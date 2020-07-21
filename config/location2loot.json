@@ -1,0 +1,13 @@
+{
+    "DemoChestInFrontOfRedRoofedHouse": "heartpiece",
+    "DemoChestInFrontOfBlueRoofedHouse": "sword",
+    "DemoChestOnOpenField": "heartfull",
+    "DemoChestInWoods": "bombs",
+    "DemoChestOnPath": "greencoin",
+    "DemoChestAtVendorLeft": "heartpiece",
+    "DemoChestAtVendorRight": "bombs",
+    "DemoChestInCave": "heartpiece",
+    "DemoChestBehindBlastWallInCave": "bow",
+    "DemoChestBehindBowPuzzle": "redcoin",
+    "DemoChestAfterDifficultBattle": "heartpiece"
+}
