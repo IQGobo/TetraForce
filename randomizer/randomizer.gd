@@ -1,31 +1,35 @@
 extends Node
-
 class_name Randomizer
 
-# var rng = RandomNumberGenerator.new()
+# The randomizer is called via the main function "create".
+# Right now it needs two mapping files:
+# - one with the location IDs and their original item to drop in the main game
+#   As this will be the same for each randomizer setting, you don't have to
+#   provide the file name, its default is "res://config/location2loot.json"
+# - one with the location IDs and a conditional expression, which equipment is 
+#   needed to access this location
+# Those files are manually crafted by now, maybe the loot one can be exported
+# automatically later on.
+
+# The function also takes an array of starting equipment to allow for more varied
+# starting conditions. Players might only spawn with a single heart or with
+# additional gear to ease the early game, like better armor or starting with
+# bombs already. 
+# As of now the starting gear is not saved with the random seed file!
+# Maybe we should come up with a pseudo location for that, so that it can be
+# included.
+
+# The generated seed is saved as a JSON file in user-space.
+# The file is put into the "seeds" subdirectory and named after the MD5-Hash
+# of the JSON contents. In future those seed files will be selected at the start
+# of the game by the host.
 
 func create(logicFileName: String, startingEquipment : Array) -> String:
-	# rng.randomize()
 	randomize()
-	# print("Random number: ", randi())
 	
-	var logicFile := File.new()
-	if not logicFile.file_exists(logicFileName):
-		print("ERROR: could not load file with randomizer logic at ", logicFileName)
-		return "ERROR: load logic"
-	logicFile.open(logicFileName, File.READ)
-	var logic : Dictionary = parse_json(logicFile.get_as_text())
-	logicFile.close()
+	var logic : Dictionary = _loadJson(logicFileName)
 	# print("Logic: ", logic)
-	
-	var locationFile := File.new()
-	var locationFileName := "res://config/location2loot.json"
-	if not locationFile.file_exists(locationFileName):
-		print("ERROR: coult not load file with location data at ", locationFileName)
-		return "ERROR: load locations"
-	locationFile.open(locationFileName, File.READ)
-	var locations : Dictionary = parse_json(locationFile.get_as_text())
-	locationFile.close()
+	var locations : Dictionary = _loadJson("res://config/location2loot.json")
 	# print("Locations: ", locations)
 	
 	# sanity check if all random loot drop location are known to the logic
@@ -36,8 +40,8 @@ func create(logicFileName: String, startingEquipment : Array) -> String:
 	
 	# loop until the size of redistributed equals locations
 	var redistributed : Dictionary = {}
-	var maxTries = 20
-	var tries = 0
+	var maxTries : int = 20
+	var tries : int = 0
 	while redistributed.size() < locations.size() && tries < maxTries:
 		redistributed = _shuffle(logic, locations, startingEquipment)
 		tries += 1
@@ -50,25 +54,39 @@ func create(logicFileName: String, startingEquipment : Array) -> String:
 	# the real path should be something like "%APPDATA%/TetraForce/seeds/<hash>.json" on Windows
 	# or "~/.local/share/godot/app_userdata/TetraForce/seeds/<hash>.json" for Mac and Linux
 	
-	var seedDir = "user://seeds/"
+	var seedDir : String = "user://seeds/"
 	var dirHandle = Directory.new()
-	var redistributedJson = to_json(redistributed)
-	var redistributedHash = redistributedJson.md5_text()
-	var seedFileName = seedDir + redistributedHash + ".json"
-	# var seedFileName = "user://seed.json"
+	var redistributedJson : String = to_json(redistributed)
+	var redistributedHash : String = redistributedJson.md5_text()
+	var seedFileName : String= seedDir + redistributedHash + ".json"
 	# print("\nAttempting to save seed to file ", seedFileName)
 	
 	if not dirHandle.dir_exists(seedDir):
 		dirHandle.make_dir_recursive(seedDir)
-	var seedFile = File.new()
-	var openError = seedFile.open(seedFileName, File.WRITE)
-	if openError != OK:
-		print("ERROR: Could not save seed to File, code ", openError)
-		return "ERROR: save seed failed"
-	seedFile.store_string(redistributedJson)
-	seedFile.close()
+	
+	print(_saveJson(seedFileName, redistributedJson))
 	
 	return "OK: " + redistributedHash
+
+func _loadJson(filename : String):
+	var file := File.new()
+	if not file.file_exists(filename):
+		print("ERROR: could not load file ", filename)
+		return "ERROR: load " + filename
+	file.open(filename, File.READ)
+	var result = parse_json(file.get_as_text())
+	file.close()
+	return result
+
+func _saveJson(filename : String, contents) -> String:
+	var file = File.new()
+	var openError = file.open(filename, File.WRITE)
+	if openError != OK:
+		print("ERROR: Could not save to file " + filename + ", code ", openError)
+		return "ERROR: save failed for " + filename
+	file.store_string(contents)
+	file.close()
+	return "OK: saved " + filename
 
 func _shuffle(logic : Dictionary, locationData : Dictionary, startingEquipment : Array = ["heartfull", "heartfull", "heartfull"]) -> Dictionary:
 	var locations : Array = locationData.keys()
@@ -122,15 +140,26 @@ func _availableLocations(locations : Array, has : Dictionary, logic : Dictionary
 func _randomizerInventoryInit(items : Array) -> Dictionary:
 	var result : Dictionary = {}
 	
+	# numerical loadout
 	result["hearts"] = 0
 	result["piecesofheart"] = 0
 	result["coins"] = 0
 	
+	# pseudo items for advanced strategies and easier conditions
+	
+	# "darkroomtraversal" indicates if the player is able to go through dark
+	# rooms. Will get set by any light source the player picks up, but can be
+	# set as a starting equipment for advanced logic, if a player is able to
+	# go through dark rooms blindly
+	result["darkroomtraversal"] = false
+	
+	# at the initialization phase we are not interested in these items
 	var skipItems = ["heartfull", "heartpiece", "redcoin", "bluecoin", "greencoin", "purplecoin", "silvercoin", "goldcoin"]
 	
 	for item in items:
 		if skipItems.has(item):
 			continue
+		# set everything else to false, so the logic checks don't choke up
 		result[item] = false
 	
 	return result
@@ -156,6 +185,9 @@ func _randomizerInventoryAdd(inventory : Dictionary, item : String) -> Dictionar
 			inventory["coins"] += 100
 		"goldcoin":
 			inventory["coins"] += 300
+		"lamp":
+			inventory[item] = true
+			inventory["darkroomtraversal"] = true
 		_:
 			inventory[item] = true
 	
