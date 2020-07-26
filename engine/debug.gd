@@ -4,8 +4,8 @@ onready var text = $Control/Label
 var debug_text : String = "empty"
 
 func _init():
-	var Randomizer = load("res://randomizer/randomizer.gd")
-	var rzer = Randomizer.new()
+	var Randomizer : Resource = load("res://randomizer/randomizer.gd")
+	var rzer : Randomizer = Randomizer.new()
 	debug_text = rzer.create("res://config/location2logic.json", ["heartfull", "heartfull", "heartfull"])
 
 func _process(delta):

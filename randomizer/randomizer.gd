@@ -15,9 +15,9 @@ class_name Randomizer
 # starting conditions. Players might only spawn with a single heart or with
 # additional gear to ease the early game, like better armor or starting with
 # bombs already. 
-# As of now the starting gear is not saved with the random seed file!
-# Maybe we should come up with a pseudo location for that, so that it can be
-# included.
+# The generated file has the starting equipment at ["metadata"]["startingequipment"]
+# plus some additional info like the creation timestamp and the file used for
+# the logic of that seed.
 
 # The generated seed is saved as a JSON file in user-space.
 # The file is put into the "seeds" subdirectory and named after the MD5-Hash
@@ -48,17 +48,25 @@ func create(logicFileName: String, startingEquipment : Array) -> String:
 	if redistributed.size() < locations.size():
 		print("ERROR: could not generate a random distribution with all locations")
 		return "ERROR: incomplete seed"
+	var ts = OS.get_unix_time()
+	redistributed["metadata"] = {}
+	redistributed["metadata"]["createdate"] = OS.get_datetime_from_unix_time(ts)
+	redistributed["metadata"]["unixtimestamp"] = ts
+	redistributed["metadata"]["startingequipment"] = startingEquipment
+	redistributed["metadata"]["logicfile"] = logicFileName
 	print("new seed: ", redistributed)
 	
 	# save redistributed as seed file to user directory "seeds" with a hashed name
-	# the real path should be something like "%APPDATA%/TetraForce/seeds/<hash>.json" on Windows
-	# or "~/.local/share/godot/app_userdata/TetraForce/seeds/<hash>.json" for Mac and Linux
+	# the real path should be something like "%APPDATA%/TetraForce/seeds/<timestamp>_<hash>.json" on Windows
+	# or "~/.local/share/godot/app_userdata/TetraForce/seeds/<timestamp>_<hash>.json" for Mac and Linux
+	# <timestamp> is a unix epoch timestamp, seconds passed since 1970-01-01 00:00:00
+	# <hash> is the MD5 of the JSON representation of the data in the file
 	
 	var seedDir : String = "user://seeds/"
 	var dirHandle = Directory.new()
 	var redistributedJson : String = to_json(redistributed)
 	var redistributedHash : String = redistributedJson.md5_text()
-	var seedFileName : String= seedDir + redistributedHash + ".json"
+	var seedFileName : String= seedDir + String(ts) + "_" + redistributedHash + ".json"
 	# print("\nAttempting to save seed to file ", seedFileName)
 	
 	if not dirHandle.dir_exists(seedDir):
