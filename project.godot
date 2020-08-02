@@ -28,12 +28,18 @@ _global_script_classes=[ {
 "class": "Player",
 "language": "GDScript",
 "path": "res://player/player.gd"
+}, {
+"base": "Node",
+"class": "prizepacks",
+"language": "GDScript",
+"path": "res://engine/prizepacks.gd"
 } ]
 _global_script_class_icons={
 "Enemy": "",
 "Entity": "",
 "Item": "",
-"Player": ""
+"Player": "",
+"prizepacks": ""
 }
 
 [application]
